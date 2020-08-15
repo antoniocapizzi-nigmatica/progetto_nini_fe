@@ -1,7 +1,7 @@
 pipeline {
     agent any
     environment {
-        CI = 'true'
+        //CI = 'true'
         port = 3006
     }
     stages {
