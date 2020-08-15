@@ -1,9 +1,6 @@
 pipeline {
     agent any
-    environment {
-        //CI = 'true'
-        port = 3006
-    }
+
     stages {
         stage('Build') {
             steps {
