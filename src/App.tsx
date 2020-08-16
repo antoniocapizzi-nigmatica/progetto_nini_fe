@@ -41,19 +41,23 @@ function App() {
                 marginTop: theme.spacing(2),
             },
             short: {
-                maxWidth: 150
+                maxWidth: 150,
+                marginRight: 10
             },
             table: {
                 width: 500,
                 marginTop: theme.spacing(2),
                 marginRight: theme.spacing(1),
             },
+            padd: {
+                padding: 10
+            }
         }),
     );
     const classes = useStyles();
     const [state, setState] = React.useState<{ serverurl: string; algorithm: string; text: string; table: dataFromServer, descriptionsToShow: string[], selectedDescriptions: string[] }>({
         serverurl: '',
-        algorithm: 'logreg',
+        algorithm: 'randfor',
         text: '',
         table: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]},
         descriptionsToShow: [],
@@ -92,7 +96,7 @@ function App() {
                     <Grid container direction="column" justify="center" alignItems="stretch">
                         <TextField
                             id="outlined-multiline-static"
-                            label="Insert the text here"
+                            label="Add a project or a lesson as text"
                             multiline
                             value={state.text}
                             onChange={handleChange}
@@ -100,28 +104,35 @@ function App() {
                             rows={4}
                             variant="outlined"
                         />
-                        <TextField id="standard-basic"
-                                   label="Insert the server url here"
-                                   value={state.serverurl}
-                                   onChange={handleChange}
-                                   name="serverurl"
-                                   className={classes.formControl}
-                        />
-                        <FormControl className={classes.formControl}>
-                            <NativeSelect
-                                value={state.algorithm}
-                                onChange={handleChange}
-                                name="algorithm"
-                                className={classes.selectEmpty}
-                                inputProps={{'aria-label': 'algorithm'}}
-                            >
-                                <option value={"logreg"}>Logistic Regression</option>
-                                <option value={"svm"}>SVM</option>
-                                <option value={"randfor"}>Random Forest</option>
-                            </NativeSelect>
-                            <FormHelperText>Select the algorithm</FormHelperText>
-                        </FormControl>
-                        <Button className={classes.short} variant="contained" onClick={submit}>Submit</Button>
+                        <Grid container direction="row">
+                            <TextField id="standard-basic"
+                                       label="Insert the server url here"
+                                       value={state.serverurl}
+                                       onChange={handleChange}
+                                       name="serverurl"
+                                       className={classes.formControl}
+                            />
+                            <FormControl className={classes.formControl}>
+                                <NativeSelect
+                                    value={state.algorithm}
+                                    onChange={handleChange}
+                                    name="algorithm"
+                                    className={classes.selectEmpty}
+                                    inputProps={{'aria-label': 'algorithm'}}
+                                >
+                                    <option value={"randfor"}>Random Forest (Recommended)</option>
+                                    <option value={"logreg"}>Logistic Regression</option>
+                                    <option value={"svm"}>SVM</option>
+
+                                </NativeSelect>
+                                <FormHelperText>Select the algorithm</FormHelperText>
+                            </FormControl>
+                        </Grid>
+                        <Grid container direction="row" justify="center" alignItems="center">
+                            <Button className={classes.short} variant="contained" color="primary" onClick={submit}>Submit</Button>
+                            <Button className={classes.short} variant="contained">Reset</Button>
+                        </Grid>
+
 
                         <Grid container direction="row" justify="flex-start" alignItems="flex-start">
                             <TableContainer className={classes.table}>
@@ -129,14 +140,14 @@ function App() {
                                     <TableHead>
                                         <TableRow>
                                             <StyledTableCell>Recommended Areas</StyledTableCell>
-                                            <StyledTableCell>%</StyledTableCell>
+                                            <StyledTableCell>Probabilities</StyledTableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
                                         {state.table.response.map(row => (
                                             <TableRow>
                                                 <TableCell onClick={() =>setDescriptionToShow(row.correlated_descriptions)}>{row.subcategory}</TableCell>
-                                                <TableCell>{row.percentage}</TableCell>
+                                                <TableCell>{row.percentage+" %"}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
@@ -147,7 +158,7 @@ function App() {
                                 <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
-                                            <StyledTableCell>Descriptions</StyledTableCell>
+                                            <StyledTableCell>Related Competencies</StyledTableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
@@ -164,7 +175,7 @@ function App() {
                                 <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
-                                            <StyledTableCell>Selected Descriptions</StyledTableCell>
+                                            <StyledTableCell>Selected Competencies</StyledTableCell>
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
