@@ -12,7 +12,7 @@ pipeline {
             steps {
                 sh 'npm run build'
                 //sh 'npm start'
-                sh 'npm install -g serve'
+                sh 'sudo npm install -g serve'
                 sh 'serve -s build'
                 //input message: 'Finished using the web site? (Click "Proceed" to continue)'
             }
