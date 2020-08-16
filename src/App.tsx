@@ -56,8 +56,8 @@ function App() {
         algorithm: 'logreg',
         text: '',
         table: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]},
-        descriptionsToShow: [''],
-        selectedDescriptions: ['']
+        descriptionsToShow: [],
+        selectedDescriptions: []
     });
 
     const handleChange = (event: React.ChangeEvent<{ name?: string; value: unknown }>) => {
