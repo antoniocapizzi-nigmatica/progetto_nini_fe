@@ -44,8 +44,9 @@ function App() {
                 maxWidth: 150
             },
             table: {
-                width: 200,
+                width: 500,
                 marginTop: theme.spacing(2),
+                marginRight: theme.spacing(1),
             },
         }),
     );
@@ -122,9 +123,9 @@ function App() {
                         </FormControl>
                         <Button className={classes.short} variant="contained" onClick={submit}>Submit</Button>
 
-                        <Grid container direction="row">
-                            <TableContainer>
-                                <Table className={classes.table} aria-label="simple table">
+                        <Grid container direction="row" justify="flex-start" alignItems="flex-start">
+                            <TableContainer className={classes.table}>
+                                <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
                                             <StyledTableCell>Recommended Areas</StyledTableCell>
@@ -142,8 +143,8 @@ function App() {
                                 </Table>
                             </TableContainer>
 
-                            <TableContainer>
-                                <Table className={classes.table} aria-label="simple table">
+                            <TableContainer className={classes.table}>
+                                <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
                                             <StyledTableCell>Descriptions</StyledTableCell>
@@ -159,8 +160,8 @@ function App() {
                                 </Table>
                             </TableContainer>
 
-                            <TableContainer>
-                                <Table className={classes.table} aria-label="simple table">
+                            <TableContainer className={classes.table}>
+                                <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
                                             <StyledTableCell>Selected Descriptions</StyledTableCell>
