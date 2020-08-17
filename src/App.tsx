@@ -45,10 +45,7 @@ function App() {
                 maxWidth: 150,
                 marginRight: 10
             },
-            dndLabels: {
-               // maxWidth: 150,
-                marginRight: 100
-            },
+
             table: {
                 width: 500,
                 marginTop: theme.spacing(2),
@@ -107,7 +104,8 @@ function App() {
         background: isDraggingOver ? 'lightblue' : 'lightgrey',
         padding: grid,
         width: 300,
-        minHeight: 400
+        minHeight: 400,
+        marginRight: 10
     });
     const reorder = (list: string[], startIndex: number, endIndex: number) => {
         const result = Array.from(list);
@@ -225,11 +223,11 @@ function App() {
                                 </Table>
                             </TableContainer>
                             <Grid item direction="column">
-                                <Grid container direction="row">
-                                    <h4 className={classes.dndLabels}>Related Competencies</h4>
+                                <Grid container direction="row" justify="space-around" alignItems="center">
+                                    <h4>Related Competencies</h4>
                                     <h4>Selected Competencies</h4>
                                 </Grid>
-                                <Grid container direction="row">
+                                <Grid container direction="row" justify="space-around" alignItems="center">
                                     <DragDropContext onDragEnd={onDragEnd}>
                                         <Droppable droppableId="droppable">
                                             {(provided, snapshot) => (
