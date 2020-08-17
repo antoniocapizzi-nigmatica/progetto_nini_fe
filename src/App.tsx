@@ -86,10 +86,9 @@ function App() {
     const setDescriptionToShow = (descr: string[]) => {
             setState({ ...state, descriptionsToShow: descr });
     };
-    const addSelectedDescription = (descr: string) => {
-        let sel = state.selectedDescriptions;
-        sel.push(descr);
-        setState({ ...state, selectedDescriptions: sel });
+    const reset = () => {
+
+        setState({ ...state, selectedDescriptions: [], descriptionsToShow:[],  table: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]}, text: ''});
     };
     const grid:number = 8;
     const getItemStyle = (isDragging: boolean, draggableStyle: any):{} => ({
@@ -199,7 +198,7 @@ function App() {
                         </Grid>
                         <Grid container direction="row" justify="center" alignItems="center">
                             <Button className={classes.short} variant="contained" color="primary" onClick={submit}>Submit</Button>
-                            <Button className={classes.short} variant="contained">Reset</Button>
+                            <Button className={classes.short} variant="contained" onClick={reset}>Reset</Button>
                         </Grid>
 
 
