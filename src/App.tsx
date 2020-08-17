@@ -9,6 +9,7 @@ import FormControl from '@material-ui/core/FormControl';
 import {Button, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
 import NativeSelect from '@material-ui/core/NativeSelect';
 import axios from 'axios';
+import {DragDropContext, Droppable, Draggable, DropResult, DraggableLocation} from "react-beautiful-dnd";
 
 function App() {
     interface dataFromServer {
@@ -43,6 +44,10 @@ function App() {
             short: {
                 maxWidth: 150,
                 marginRight: 10
+            },
+            dndLabels: {
+               // maxWidth: 150,
+                marginRight: 100
             },
             table: {
                 width: 500,
@@ -88,6 +93,72 @@ function App() {
         let sel = state.selectedDescriptions;
         sel.push(descr);
         setState({ ...state, selectedDescriptions: sel });
+    };
+    const grid:number = 8;
+    const getItemStyle = (isDragging: boolean, draggableStyle: any):{} => ({
+        userSelect: 'none',
+        padding: 2*grid,
+        margin: `0 0 ${grid}px 0`,
+        background: isDragging ? 'lightgreen' : 'grey',
+        ...draggableStyle
+    });
+
+    const getListStyle = (isDraggingOver: boolean):{} => ({
+        background: isDraggingOver ? 'lightblue' : 'lightgrey',
+        padding: grid,
+        width: 300,
+        minHeight: 400
+    });
+    const reorder = (list: string[], startIndex: number, endIndex: number) => {
+        const result = Array.from(list);
+        const [removed] = result.splice(startIndex, 1);
+        result.splice(endIndex, 0, removed);
+
+        return result;
+    };
+    const move = (source: string[], destination:string[], droppableSource: DraggableLocation, droppableDestination: DraggableLocation) => {
+        const sourceClone = Array.from(source);
+        const destClone = Array.from(destination);
+        const [removed] = sourceClone.splice(droppableSource.index, 1);
+
+        destClone.splice(droppableDestination.index, 0, removed);
+
+        const result = {droppable: sourceClone, droppable2: destClone};
+
+        return result;
+    };
+    const onDragEnd = (result: DropResult) => {
+        const { source, destination } = result;
+
+        // dropped outside the list
+        if (!destination) {
+            return;
+        }
+
+        if (source.droppableId === destination.droppableId) {
+            const items = reorder(
+                state.descriptionsToShow,
+                source.index,
+                destination.index
+            );
+
+
+            if (source.droppableId === 'droppable2') {
+                setState({...state, descriptionsToShow: items})
+            }
+
+
+        } else {
+            const result = move(
+                state.descriptionsToShow,
+                state.selectedDescriptions,
+                source,
+                destination
+            );
+
+            setState({...state, descriptionsToShow: result.droppable, selectedDescriptions: result.droppable2})
+        }
+
     };
     return (
         <div className="App">
@@ -153,8 +224,75 @@ function App() {
                                     </TableBody>
                                 </Table>
                             </TableContainer>
+                            <Grid item direction="column">
+                                <Grid container direction="row">
+                                    <h4 className={classes.dndLabels}>Related Competencies</h4>
+                                    <h4>Selected Competencies</h4>
+                                </Grid>
+                                <Grid container direction="row">
+                                    <DragDropContext onDragEnd={onDragEnd}>
+                                        <Droppable droppableId="droppable">
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    style={getListStyle(snapshot.isDraggingOver)}>
+                                                    {state.descriptionsToShow.map((item, index) => (
+                                                        <Draggable
+                                                            key={item}
+                                                            draggableId={item}
+                                                            index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={getItemStyle(
+                                                                        snapshot.isDragging,
+                                                                        provided.draggableProps.style
+                                                                    )}>
+                                                                    {item}
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                        <Droppable droppableId="droppable2">
+                                            {(provided, snapshot) => (
+                                                <div
+                                                    ref={provided.innerRef}
+                                                    style={getListStyle(snapshot.isDraggingOver)}>
+                                                    {state.selectedDescriptions.map((item, index) => (
+                                                        <Draggable
+                                                            key={item}
+                                                            draggableId={item}
+                                                            index={index}>
+                                                            {(provided, snapshot) => (
+                                                                <div
+                                                                    ref={provided.innerRef}
+                                                                    {...provided.draggableProps}
+                                                                    {...provided.dragHandleProps}
+                                                                    style={getItemStyle(
+                                                                        snapshot.isDragging,
+                                                                        provided.draggableProps.style
+                                                                    )}>
+                                                                    {item}
+                                                                </div>
+                                                            )}
+                                                        </Draggable>
+                                                    ))}
+                                                    {provided.placeholder}
+                                                </div>
+                                            )}
+                                        </Droppable>
+                                    </DragDropContext>
+                                </Grid>
 
-                            <TableContainer className={classes.table}>
+                            </Grid>
+
+                            {/* <TableContainer className={classes.table}>
                                 <Table aria-label="simple table">
                                     <TableHead>
                                         <TableRow>
@@ -186,7 +324,7 @@ function App() {
                                         ))}
                                     </TableBody>
                                 </Table>
-                            </TableContainer>
+                            </TableContainer> */}
                         </Grid>
 
                     </Grid>
