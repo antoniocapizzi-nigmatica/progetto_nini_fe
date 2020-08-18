@@ -263,10 +263,10 @@ function App() {
                                 >
                                     <option value={"randfor"}>Random Forest (Recommended)</option>
                                     <option value={"logreg"}>Logistic Regression</option>
-                                    <option value={"svmlin"}>SVM (Linear)</option>
-                                    <option value={"svmsig"}>SVM (Sigmoid)</option>
+                                    <option value={"svmlin"}>SVM with linear kernel</option>
+                                    <option value={"svmsig"}>SVM with sigmoid kernel</option>
                                     <option value={"knn"}>KNN</option>
-                                    <option value={"knnbag"}>KNN (Bagging)</option>
+                                    <option value={"knnbag"}>KNN with bagging</option>
 
                                 </NativeSelect>
                                 <FormHelperText>Select the algorithm</FormHelperText>
