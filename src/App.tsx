@@ -51,7 +51,7 @@ function App() {
             formControl: {
                 margin: theme.spacing(1),
                 minWidth: 120,
-                maxWidth: 300
+                width: 500
             },
             selectEmpty: {
                 marginTop: theme.spacing(2),
@@ -71,18 +71,20 @@ function App() {
             },
             footer: {
                 marginTop: theme.spacing(5),
-            }
+            },
+
         }),
     );
     const classes = useStyles();
-    const [state, setState] = React.useState<{ serverurl: string; algorithm: string; text: string; responseFromServer: dataFromServer, rowsToShow:rowsinterface[], descriptionsToShow: string[], selectedDescriptions: string[] }>({
+    const [state, setState] = React.useState<{ serverurl: string; algorithm: string; text: string; responseFromServer: dataFromServer, rowsToShow:rowsinterface[], descriptionsToShow: string[], selectedDescriptions: string[], showOutput: boolean }>({
         rowsToShow: [],
         serverurl: '',
         algorithm: 'randfor',
         text: '',
         responseFromServer: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]},
         descriptionsToShow: [],
-        selectedDescriptions: []
+        selectedDescriptions: [],
+        showOutput: false
     });
 
     const handleChange = (event: React.ChangeEvent<{ name?: string; value: unknown }>) => {
@@ -110,7 +112,7 @@ function App() {
         console.log(state.algorithm);
         axios.post<dataFromServer>(state.serverurl, request)
             .then(response => {
-                setState({ ...state, responseFromServer: response.data, rowsToShow: prepareData(response.data) });
+                setState({ ...state, responseFromServer: response.data, rowsToShow: prepareData(response.data), showOutput: true});
 
                 console.log(response.data);
             });
@@ -129,7 +131,7 @@ function App() {
                 }
             }
             else {
-                let diff = (rowToShowLength + 5) - state.responseFromServer.response.length;
+                let diff = state.responseFromServer.response.length - rowToShowLength;
                 for (var _i = rowToShowLength; _i < rowToShowLength + diff; _i++) {
                     temp.push(state.responseFromServer.response[_i])
                 }
@@ -144,7 +146,7 @@ function App() {
     };
     const reset = () => {
 
-        setState({ ...state, selectedDescriptions: [], descriptionsToShow:[], rowsToShow: [] , text: ''});
+        setState({ ...state, selectedDescriptions: [], descriptionsToShow:[], rowsToShow: [] , text: '', showOutput: false});
     };
     const grid:number = 8;
     const getItemStyle = (isDragging: boolean, draggableStyle: any):{} => ({
@@ -243,7 +245,7 @@ function App() {
                             rows={4}
                             variant="outlined"
                         />
-                        <Grid container direction="row">
+                        <Grid container direction="row" justify="center" alignItems="flex-start">
                             <TextField id="standard-basic"
                                        label="Insert the server url here"
                                        value={state.serverurl}
@@ -273,102 +275,106 @@ function App() {
                         </Grid>
 
 
-                        <Grid container direction="row" justify="flex-start" alignItems="flex-start">
-                            <TableContainer className={classes.table}>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <StyledTableCell>Recommended Areas</StyledTableCell>
-                                            <StyledTableCell>Probabilities</StyledTableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {state.rowsToShow.map(row => (
-                                            <TableRow>
-                                                <TableCell >
-                                                    <Button variant="contained" onClick={() =>setDescriptionToShow(row.correlated_descriptions)}>{row.subcategory}</Button>
-                                                </TableCell>
-                                                <TableCell>{row.percentage+" %"}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                    <TableFooter >
-                                        <Grid className={classes.footer} container direction="row" justify="flex-start" alignItems="flex-end">
-                                            <Button variant="contained" onClick={loadMore}>Load More</Button>
+                        { state.showOutput
+                            ? <div>
+                                <Grid container direction="row" justify="flex-start" alignItems="flex-start">
+                                    <TableContainer className={classes.table}>
+                                        <Table aria-label="simple table">
+                                            <TableHead>
+                                                <TableRow>
+                                                    <StyledTableCell>Recommended Areas</StyledTableCell>
+                                                    <StyledTableCell>Probabilities</StyledTableCell>
+                                                </TableRow>
+                                            </TableHead>
+                                            <TableBody>
+                                                {state.rowsToShow.map(row => (
+                                                    <TableRow>
+                                                        <TableCell >
+                                                            <Button variant="contained" onClick={() =>setDescriptionToShow(row.correlated_descriptions)}>{row.subcategory}</Button>
+                                                        </TableCell>
+                                                        <TableCell>{row.percentage+" %"}</TableCell>
+                                                    </TableRow>
+                                                ))}
+                                            </TableBody>
+                                            <TableFooter >
+                                                <Grid className={classes.footer} container direction="row" justify="center" alignItems="flex-end">
+                                                    <Button variant="contained" onClick={loadMore}>Load 5 More Areas</Button>
+                                                </Grid>
+                                            </TableFooter>
+                                        </Table>
+                                    </TableContainer>
+                                    <Grid item direction="column">
+                                        <Grid container direction="row" justify="space-around" alignItems="center">
+                                            <h4>Related Competencies</h4>
+                                            <h4>Selected Competencies</h4>
                                         </Grid>
-                                    </TableFooter>
-                                </Table>
-                            </TableContainer>
-                            <Grid item direction="column">
-                                <Grid container direction="row" justify="space-around" alignItems="center">
-                                    <h4>Related Competencies</h4>
-                                    <h4>Selected Competencies</h4>
+                                        <Grid container direction="row" justify="space-around" alignItems="flex-start">
+                                            <DragDropContext onDragEnd={onDragEnd}>
+                                                <Droppable droppableId="droppable">
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={getListStyle(snapshot.isDraggingOver)}>
+                                                            {state.descriptionsToShow.map((item, index) => (
+                                                                <Draggable
+                                                                    key={item}
+                                                                    draggableId={item}
+                                                                    index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}>
+                                                                            {item}
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                                <Droppable droppableId="droppable2">
+                                                    {(provided, snapshot) => (
+                                                        <div
+                                                            ref={provided.innerRef}
+                                                            style={getListStyle(snapshot.isDraggingOver)}>
+                                                            {state.selectedDescriptions.map((item, index) => (
+                                                                <Draggable
+                                                                    key={item}
+                                                                    draggableId={item}
+                                                                    index={index}>
+                                                                    {(provided, snapshot) => (
+                                                                        <div
+                                                                            ref={provided.innerRef}
+                                                                            {...provided.draggableProps}
+                                                                            {...provided.dragHandleProps}
+                                                                            style={getItemStyle(
+                                                                                snapshot.isDragging,
+                                                                                provided.draggableProps.style
+                                                                            )}>
+                                                                            {item}
+                                                                        </div>
+                                                                    )}
+                                                                </Draggable>
+                                                            ))}
+                                                            {provided.placeholder}
+                                                        </div>
+                                                    )}
+                                                </Droppable>
+                                            </DragDropContext>
+                                        </Grid>
+
+                                    </Grid>
+
                                 </Grid>
-                                <Grid container direction="row" justify="space-around" alignItems="flex-start">
-                                    <DragDropContext onDragEnd={onDragEnd}>
-                                        <Droppable droppableId="droppable">
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    style={getListStyle(snapshot.isDraggingOver)}>
-                                                    {state.descriptionsToShow.map((item, index) => (
-                                                        <Draggable
-                                                            key={item}
-                                                            draggableId={item}
-                                                            index={index}>
-                                                            {(provided, snapshot) => (
-                                                                <div
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    style={getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )}>
-                                                                    {item}
-                                                                </div>
-                                                            )}
-                                                        </Draggable>
-                                                    ))}
-                                                    {provided.placeholder}
-                                                </div>
-                                            )}
-                                        </Droppable>
-                                        <Droppable droppableId="droppable2">
-                                            {(provided, snapshot) => (
-                                                <div
-                                                    ref={provided.innerRef}
-                                                    style={getListStyle(snapshot.isDraggingOver)}>
-                                                    {state.selectedDescriptions.map((item, index) => (
-                                                        <Draggable
-                                                            key={item}
-                                                            draggableId={item}
-                                                            index={index}>
-                                                            {(provided, snapshot) => (
-                                                                <div
-                                                                    ref={provided.innerRef}
-                                                                    {...provided.draggableProps}
-                                                                    {...provided.dragHandleProps}
-                                                                    style={getItemStyle(
-                                                                        snapshot.isDragging,
-                                                                        provided.draggableProps.style
-                                                                    )}>
-                                                                    {item}
-                                                                </div>
-                                                            )}
-                                                        </Draggable>
-                                                    ))}
-                                                    {provided.placeholder}
-                                                </div>
-                                            )}
-                                        </Droppable>
-                                    </DragDropContext>
-                                </Grid>
-
-                            </Grid>
-
-                        </Grid>
-
+                            </div>
+                            : null
+                        }
                     </Grid>
                 </form>
             </Grid>
