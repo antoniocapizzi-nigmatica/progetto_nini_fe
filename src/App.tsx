@@ -6,7 +6,17 @@ import TextField from '@material-ui/core/TextField';
 import {createStyles, makeStyles, Theme, withStyles} from '@material-ui/core/styles';
 import FormHelperText from '@material-ui/core/FormHelperText';
 import FormControl from '@material-ui/core/FormControl';
-import {Button, Grid, Table, TableBody, TableCell, TableContainer, TableHead, TableRow} from "@material-ui/core";
+import {
+    Button,
+    Grid,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableFooter,
+    TableHead,
+    TableRow
+} from "@material-ui/core";
 import NativeSelect from '@material-ui/core/NativeSelect';
 import axios from 'axios';
 import {DragDropContext, Droppable, Draggable, DropResult, DraggableLocation} from "react-beautiful-dnd";
@@ -19,6 +29,11 @@ function App() {
             percentage: number,
             correlated_descriptions: string[]
             }[]
+    }
+    interface rowsinterface {
+        subcategory: string,
+        percentage: number,
+        correlated_descriptions: string[]
     }
     const StyledTableCell = withStyles((theme: Theme) =>
         createStyles({
@@ -53,15 +68,19 @@ function App() {
             },
             padd: {
                 padding: 10
+            },
+            footer: {
+                marginTop: theme.spacing(5),
             }
         }),
     );
     const classes = useStyles();
-    const [state, setState] = React.useState<{ serverurl: string; algorithm: string; text: string; table: dataFromServer, descriptionsToShow: string[], selectedDescriptions: string[] }>({
+    const [state, setState] = React.useState<{ serverurl: string; algorithm: string; text: string; responseFromServer: dataFromServer, rowsToShow:rowsinterface[], descriptionsToShow: string[], selectedDescriptions: string[] }>({
+        rowsToShow: [],
         serverurl: '',
         algorithm: 'randfor',
         text: '',
-        table: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]},
+        responseFromServer: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]},
         descriptionsToShow: [],
         selectedDescriptions: []
     });
@@ -73,22 +92,59 @@ function App() {
             [name]: event.target.value,
         });
     };
-
+    const prepareData = (data: dataFromServer) => {
+        console.log(data.response.length);
+        if((data.response.length / 5) <= 1)
+            return data.response;
+        else {
+            var temp: rowsinterface[];
+            temp = [];
+            for (var _i = 0; _i < 5; _i++) {
+                temp.push(data.response[_i])
+            }
+            return temp;
+        }
+    };
     const submit = () => {
         let request = {algorithm: state.algorithm, text: state.text};
         console.log(state.algorithm);
         axios.post<dataFromServer>(state.serverurl, request)
             .then(response => {
-                setState({ ...state, table: response.data });
+                setState({ ...state, responseFromServer: response.data, rowsToShow: prepareData(response.data) });
+
                 console.log(response.data);
             });
+    };
+    const loadMore = () => {
+        if(state.responseFromServer.response.length <= 5) {
+            return;
+        }
+        else {
+            var temp: rowsinterface[];
+            temp = state.rowsToShow;
+            let rowToShowLength = state.rowsToShow.length;
+            if(rowToShowLength + 5 < state.responseFromServer.response.length) {
+                for (var _i = rowToShowLength; _i < rowToShowLength +  5; _i++) {
+                    temp.push(state.responseFromServer.response[_i])
+                }
+            }
+            else {
+                let diff = (rowToShowLength + 5) - state.responseFromServer.response.length;
+                for (var _i = rowToShowLength; _i < rowToShowLength + diff; _i++) {
+                    temp.push(state.responseFromServer.response[_i])
+                }
+            }
+
+            console.log(temp);
+            setState({...state, rowsToShow: temp});
+        }
     };
     const setDescriptionToShow = (descr: string[]) => {
             setState({ ...state, descriptionsToShow: descr });
     };
     const reset = () => {
 
-        setState({ ...state, selectedDescriptions: [], descriptionsToShow:[],  table: {response: [{subcategory:'', percentage: 0, correlated_descriptions: []}]}, text: ''});
+        setState({ ...state, selectedDescriptions: [], descriptionsToShow:[], rowsToShow: [] , text: ''});
     };
     const grid:number = 8;
     const getItemStyle = (isDragging: boolean, draggableStyle: any):{} => ({
@@ -120,9 +176,24 @@ function App() {
 
         destClone.splice(droppableDestination.index, 0, removed);
 
-        const result = {droppable: sourceClone, droppable2: destClone};
+        let result = {droppable: sourceClone, droppable2: destClone};
+        if(droppableSource.droppableId === "droppable")
+            result.droppable = sourceClone;
+        else
+            result.droppable = destClone;
+        if(droppableSource.droppableId === "droppable2")
+            result.droppable2 = sourceClone;
+        else
+            result.droppable2 = destClone;
 
         return result;
+    };
+
+    const getList = (id: string) => {
+        if(id === "droppable")
+            return state.descriptionsToShow;
+        else
+            return state.selectedDescriptions;
     };
     const onDragEnd = (result: DropResult) => {
         const { source, destination } = result;
@@ -134,21 +205,21 @@ function App() {
 
         if (source.droppableId === destination.droppableId) {
             const items = reorder(
-                state.descriptionsToShow,
+                getList(source.droppableId),
                 source.index,
                 destination.index
             );
 
 
             if (source.droppableId === 'droppable2') {
-                setState({...state, descriptionsToShow: items})
+                setState({...state, selectedDescriptions: items})
             }
 
 
         } else {
             const result = move(
-                state.descriptionsToShow,
-                state.selectedDescriptions,
+                getList(source.droppableId),
+                getList(destination.droppableId),
                 source,
                 destination
             );
@@ -212,13 +283,20 @@ function App() {
                                         </TableRow>
                                     </TableHead>
                                     <TableBody>
-                                        {state.table.response.map(row => (
+                                        {state.rowsToShow.map(row => (
                                             <TableRow>
-                                                <TableCell onClick={() =>setDescriptionToShow(row.correlated_descriptions)}>{row.subcategory}</TableCell>
+                                                <TableCell >
+                                                    <Button variant="contained" onClick={() =>setDescriptionToShow(row.correlated_descriptions)}>{row.subcategory}</Button>
+                                                </TableCell>
                                                 <TableCell>{row.percentage+" %"}</TableCell>
                                             </TableRow>
                                         ))}
                                     </TableBody>
+                                    <TableFooter >
+                                        <Grid className={classes.footer} container direction="row" justify="flex-start" alignItems="flex-end">
+                                            <Button variant="contained" onClick={loadMore}>Load More</Button>
+                                        </Grid>
+                                    </TableFooter>
                                 </Table>
                             </TableContainer>
                             <Grid item direction="column">
@@ -226,7 +304,7 @@ function App() {
                                     <h4>Related Competencies</h4>
                                     <h4>Selected Competencies</h4>
                                 </Grid>
-                                <Grid container direction="row" justify="space-around" alignItems="center">
+                                <Grid container direction="row" justify="space-around" alignItems="flex-start">
                                     <DragDropContext onDragEnd={onDragEnd}>
                                         <Droppable droppableId="droppable">
                                             {(provided, snapshot) => (
@@ -289,39 +367,6 @@ function App() {
 
                             </Grid>
 
-                            {/* <TableContainer className={classes.table}>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <StyledTableCell>Related Competencies</StyledTableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {state.descriptionsToShow.map(row => (
-                                            <TableRow>
-                                                <TableCell onClick={() => addSelectedDescription(row)}>{row}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer>
-
-                            <TableContainer className={classes.table}>
-                                <Table aria-label="simple table">
-                                    <TableHead>
-                                        <TableRow>
-                                            <StyledTableCell>Selected Competencies</StyledTableCell>
-                                        </TableRow>
-                                    </TableHead>
-                                    <TableBody>
-                                        {state.selectedDescriptions.map(row => (
-                                            <TableRow>
-                                                <TableCell>{row}</TableCell>
-                                            </TableRow>
-                                        ))}
-                                    </TableBody>
-                                </Table>
-                            </TableContainer> */}
                         </Grid>
 
                     </Grid>
